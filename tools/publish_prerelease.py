@@ -10,7 +10,10 @@ import zipfile
 
 
 def gh(*args, check=True):
-    return subprocess.run(['gh', *args], check=check, capture_output=True, text=True)
+    result = subprocess.run(['gh', *args], capture_output=True, text=True)
+    if check and result.returncode:
+        raise RuntimeError('GitHub CLI failed: ' + result.stderr.strip())
+    return result
 
 
 def publish(tag, commit, directory, notes):
