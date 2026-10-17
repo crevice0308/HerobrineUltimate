@@ -1,0 +1,15 @@
+pluginManagement {
+    plugins { id 'fabric-loom' version providers.gradleProperty('loom_version').getOrElse('1.6.12') }
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.fabricmc.net/' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+rootProject.name = 'HerobrineUltimate'
+// -Ploader=fabric or -Ploader=forge avoids resolving the other build toolchain.
+def chosen = providers.gradleProperty('loader').getOrElse('all')
+if (!(chosen in ['all', 'forge', 'fabric'])) throw new GradleException('loader must be all, forge, or fabric')
+if (chosen in ['all', 'forge']) include 'forge'
+if (chosen in ['all', 'fabric']) include 'fabric'

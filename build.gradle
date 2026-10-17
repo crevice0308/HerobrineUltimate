@@ -1,0 +1,15 @@
+allprojects {
+    group = providers.gradleProperty('maven_group').get()
+    version = providers.gradleProperty('mod_version').get()
+    repositories { mavenCentral() }
+}
+subprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 17
+    }
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+}

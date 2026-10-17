@@ -1,0 +1,21 @@
+modLoader="javafml"
+loaderVersion="[47,48)"
+license="MIT"
+[[mods]]
+modId="herobrineultimate"
+version="${version}"
+displayName="Herobrine Ultimate"
+authors="YutaDigital"
+description="Server-authoritative Herobrine powers with a neon control panel. Experimental alpha."
+[[dependencies.herobrineultimate]]
+modId="forge"
+mandatory=true
+versionRange="[47.4.10,48)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.herobrineultimate]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"

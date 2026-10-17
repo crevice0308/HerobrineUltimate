@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "herobrineultimate",
+  "version": "${version}",
+  "name": "Herobrine Ultimate",
+  "description": "A configurable Herobrine power console for Minecraft Java Edition.",
+  "authors": ["Yuta Digital"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.yutadigital.herobrine.fabric.HerobrineFabric"],
+    "client": ["com.yutadigital.herobrine.fabric.HerobrineFabricClient"]
+  },
+  "mixins": [
+    "herobrineultimate.fabric.mixins.json",
+    "herobrineultimate.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.11",
+    "minecraft": "1.20.1",
+    "java": ">=17",
+    "fabric-api": ">=0.92.2+1.20.1"
+  }
+}

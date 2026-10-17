@@ -1,0 +1,32 @@
+plugins {
+    id 'fabric-loom'
+}
+
+base {
+    archivesName = 'herobrineultimate-fabric'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+}
+
+sourceSets.main {
+    java.srcDir '../common/src/main/java'
+    resources.srcDir '../common/src/main/resources'
+}
+
+loom {
+    mixin {
+        defaultRefmapName = 'herobrineultimate.refmap.json'
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand version: project.version
+    }
+}

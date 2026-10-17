@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '6.0.54'
+}
+base { archivesName = 'herobrineultimate-forge' }
+java { toolchain.languageVersion = JavaLanguageVersion.of(17); withSourcesJar() }
+sourceSets.main {
+    java.srcDir '../common/src/main/java'
+    resources.srcDir '../common/src/main/resources'
+    if (project.hasProperty('game_tests')) {
+        java.srcDir 'src/gametest/java'
+        resources.srcDir 'src/gametest/resources'
+    }
+    if (project.hasProperty('client_tests')) {
+        java.srcDir 'src/clientTest/java'
+        java.srcDir '../tests/client'
+    }
+}
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', layout.buildDirectory.file('mixin/srg-to-mcp.srg').get().asFile.absolutePath
+            args '--mixin', 'herobrineultimate.mixins.json'
+            mods { herobrineultimate { source sourceSets.main } }
+        }
+        client {
+            if (project.hasProperty('client_tests')) {
+                property 'herobrineultimate.testOut', rootProject.file('docs/runtime-client').absolutePath
+                property 'herobrineultimate.testWorld', 'HerobrineUltimate-ClientTest-' + System.currentTimeMillis()
+                args '--width', '1280', '--height', '720', '--username', 'HerobrineTester'
+            }
+        }
+        gameTestServer {
+            property 'forge.enabledGameTestNamespaces', 'herobrineultimate'
+            property 'forge.gameTestServer.reportFile', layout.buildDirectory.file('gametest-results.xml').get().asFile.absolutePath
+        }
+        server {
+            args '--nogui'
+            if (project.providers.gradleProperty('init_settings').getOrElse('false').toBoolean()) args '--initSettings'
+        }
+    }
+}
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+tasks.named('processResources', ProcessResources).configure {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') { expand(version: project.version) }
+}
+// Mixin's searge annotation processor consumes legacy SRG, not ForgeGradle's TSRG2.
+tasks.register('createMixinSrg') {
+    dependsOn 'createMcpToSrg'
+    def input = layout.buildDirectory.file('createMcpToSrg/output.tsrg')
+    def output = layout.buildDirectory.file('mixin/mcp-to-srg.srg')
+    inputs.file(input)
+    def reverseOutput = layout.buildDirectory.file('mixin/srg-to-mcp.srg')
+    outputs.files(output, reverseOutput)
+    doLast {
+        output.get().asFile.parentFile.mkdirs()
+        def mappings = net.minecraftforge.srgutils.IMappingFile.load(input.get().asFile)
+        mappings.write(output.get().asFile.toPath(), net.minecraftforge.srgutils.IMappingFile.Format.SRG, false)
+        mappings.reverse().write(reverseOutput.get().asFile.toPath(), net.minecraftforge.srgutils.IMappingFile.Format.SRG, false)
+    }
+}
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn 'createMixinSrg', 'processResources'
+    options.compilerArgs += ['-AreobfSrgFile=' + layout.buildDirectory.file('mixin/mcp-to-srg.srg').get().asFile.absolutePath,
+        '-AoutRefMapFile=' + layout.buildDirectory.file('resources/main/herobrineultimate.refmap.json').get().asFile.absolutePath,
+        '-AdefaultObfuscationEnv=searge']
+}
+tasks.named('jar', Jar).configure {
+    manifest.attributes(['MixinConfigs': 'herobrineultimate.mixins.json'])
+    finalizedBy 'reobfJar'
+}

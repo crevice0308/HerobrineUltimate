@@ -1,0 +1,44 @@
+name: Validate and build
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - loader: forge
+            label: baseline
+            experimental: false
+            args: ''
+          - loader: fabric
+            label: baseline
+            experimental: false
+            args: ''
+          - loader: forge
+            label: candidate-47.4.28
+            experimental: true
+            args: '-Pforge_version=47.4.28'
+          - loader: fabric
+            label: candidate-0.20.0
+            experimental: true
+            args: '-Pfabric_loader_version=0.20.0 -Pfabric_api_version=0.92.12+1.20.1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: bash tests/run-core-tests.sh
+      - run: python3 tests/validate-project.py
+      - run: bash gradlew -Ploader=${{ matrix.loader }} ${{ matrix.args }} :${{ matrix.loader }}:build --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: herobrineultimate-${{ matrix.loader }}-${{ matrix.label }}
+          path: ${{ matrix.loader }}/build/libs/*.jar
+          if-no-files-found: error

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.yutadigital.herobrine.fabric.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "herobrineultimate.refmap.json",
+  "mixins": [
+    "ServerPlayerMixin",
+    "LivingEntityMixin",
+    "PlayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
