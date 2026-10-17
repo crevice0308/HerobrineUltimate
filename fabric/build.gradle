@@ -30,3 +30,19 @@ processResources {
         expand version: project.version
     }
 }
+
+// Framing regressions use actual mapped Minecraft NBT and Netty; never packaged.
+sourceSets {
+    packetTest {
+        java.srcDir '../tests/fabric'
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+tasks.register('packetTest', JavaExec) {
+    dependsOn tasks.named('packetTestClasses')
+    classpath = sourceSets.packetTest.runtimeClasspath
+    mainClass = 'com.yutadigital.herobrine.fabric.FabricPacketDecodeTest'
+    enableAssertions = true
+}
+tasks.named('check') { dependsOn tasks.named('packetTest') }

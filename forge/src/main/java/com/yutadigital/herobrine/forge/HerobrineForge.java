@@ -13,6 +13,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
@@ -45,8 +46,6 @@ public final class HerobrineForge {
                     DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ForgeClient.accept(packet.tag(), context.get().getNetworkManager()));
                     context.get().setPacketHandled(true);
                 }).add();
-        HerobrineServer.init(FMLPaths.CONFIGDIR.get(), (player, state) ->
-                NETWORK.send(PacketDistributor.PLAYER.with(() -> player), new State(state)));
         MinecraftForge.EVENT_BUS.addListener(this::tick);
         MinecraftForge.EVENT_BUS.addListener(this::join);
         MinecraftForge.EVENT_BUS.addListener(this::logout);
@@ -55,6 +54,7 @@ public final class HerobrineForge {
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::entityLoaded);
         MinecraftForge.EVENT_BUS.addListener(this::mining);
         MinecraftForge.EVENT_BUS.addListener(this::attack);
+        MinecraftForge.EVENT_BUS.addListener(this::start);
         MinecraftForge.EVENT_BUS.addListener(this::stop);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ForgeClient::register);
     }
@@ -85,6 +85,10 @@ public final class HerobrineForge {
     }
     private void attack(AttackEntityEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) HerobrineServer.attacked(player, event.getTarget());
+    }
+    private void start(ServerStartingEvent event) {
+        HerobrineServer.init(FMLPaths.CONFIGDIR.get(), (player, state) ->
+                NETWORK.send(PacketDistributor.PLAYER.with(() -> player), new State(state)));
     }
     private void stop(ServerStoppingEvent event) { HerobrineServer.stop(); }
     public record Request(CompoundTag tag) { }

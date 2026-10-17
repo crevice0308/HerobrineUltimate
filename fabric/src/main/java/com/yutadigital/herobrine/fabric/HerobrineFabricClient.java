@@ -40,7 +40,7 @@ public final class HerobrineFabricClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(HerobrineFabric.STATE,
             (client, handler, buffer, sender) -> {
-                CompoundTag state = HerobrineFabric.readPacket(buffer);
+                CompoundTag state = HerobrineFabric.readState(buffer);
                 if (state != null) client.execute(() -> {
                     if (client.getConnection() == handler) HerobrineClient.accept(state);
                 });

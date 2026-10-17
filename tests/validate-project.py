@@ -42,3 +42,9 @@ check('source has no vendored game binaries',not list((root/'common').rglob('*.j
 check('wrapper exists',(root/'gradle/wrapper/gradle-wrapper.jar').is_file())
 check('README exists',(root/'README.md').is_file())
 print(f'PASS: {checks} project structure checks')
+
+forge=(root/'forge/src/main/java/com/yutadigital/herobrine/forge/HerobrineForge.java').read_text()
+check('Forge reload listener registered','addListener(this::start)' in forge)
+check('Forge configuration loads on each server start',bool(re.search(r'private void start\(ServerStartingEvent event\)\s*\{\s*HerobrineServer.init',forge)))
+check('Forge constructor does not load server config','HerobrineServer.init' not in forge.split('private void tick',1)[0])
+print('PASS: Forge lifecycle wiring checks (static; runtime reopen not exercised)')

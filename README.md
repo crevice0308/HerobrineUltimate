@@ -1,15 +1,17 @@
 # Herobrine Ultimate
 
-Minecraft Java Edition **1.20.1** 用の Forge / Fabric MOD。**0.1.0-alpha.2 / Java 17 / MIT**。変身と 12 カテゴリの能力・設定をサイバーパネルから操作できます。
+Minecraft Java Edition **1.20.1** 用の Forge / Fabric MOD。**0.1.0-alpha.3 / Java 17 / MIT**。変身と 12 カテゴリの能力・設定をサイバーパネルから操作できます。
 
 **標準設定ではチート OFF・OP 権限なしで使用できます。** シングルプレイ所有者に限らず、MOD 導入済みサーバーの一般プレイヤーも対象です。OP やコマンドを付与せず、MOD 自身がサーバー側で処理します。
+
+alpha.3 は設定エラー時の権限制限、Forge の設定再読み込み、大人数時の Fabric 同期を修正しています。配布前のビルド結果は GitHub Actions を参照してください。alpha.2 のゲーム内試験を alpha.3 の実行結果として扱いません。
 
 Forge / Fabric の導入用 JAR を作成しています。実施したビルド・ゲーム内テストと未検証範囲は [TEST_RESULTS](docs/TEST_RESULTS.md)、要求との対応は [FEATURE_COVERAGE](docs/FEATURE_COVERAGE.md) にまとめています。
 
 ## 導入
 
 1. Minecraft Java Edition 1.20.1、64-bit Java 17、使用するローダーを用意します。
-2. 対応する **一つの JAR** を `mods/` に入れます。Forge 版は `herobrineultimate-forge-0.1.0-alpha.2.jar`、Fabric 版は `herobrineultimate-fabric-0.1.0-alpha.2.jar` です。`-sources.jar` は開発用です。
+2. 対応する **一つの JAR** を `mods/` に入れます。Forge 版は `herobrineultimate-forge-0.1.0-alpha.3.jar`、Fabric 版は `herobrineultimate-fabric-0.1.0-alpha.3.jar` です。`-sources.jar` は開発用です。
 3. Fabric 版では **Fabric API** も導入します。基準構成は Forge **47.4.10**、または Fabric Loader **0.16.14** + Fabric API **0.92.2+1.20.1** です。
 4. マルチプレイではサーバーと参加クライアントの両方へ、同じローダー用・同じバージョンの MOD を導入します。Fabric サーバーにも Fabric API が必要です。
 5. チート OFF のワールドでも、そのまま `Insert` でパネルを開きます。初期状態の個別能力は OFF、一括スイッチは ON です。使いたい能力を ON にしてください。
@@ -79,7 +81,7 @@ allow-terrain=true
 | `allow-player-combat` | 特殊攻撃のプレイヤー対象を使う場合 `true`。バニラの PvP / チーム判定も適用。OP である必要はない |
 | `allow-terrain` | 地形変更を有効にするか。標準は `true` |
 
-以前の設定ファイルに `require-permission` がない場合も `false` として読み込みます。死亡中・スペクテイター中の実行アクションは受け付けません。
+正常に読み込めた以前の設定ファイルに `require-permission` がない場合も `false` として読み込みます。読み込み失敗・不正な Unicode・不正な真偽値がある場合は、OP / 所有者のみの制限に戻し、地形変更・実体のある雷・特殊 PvP を無効にして警告します。壊れたファイルは上書きしません。死亡中・スペクテイター中の実行アクションは受け付けません。
 
 個別能力、一括スイッチ、4 種の倍率、帰還地点、登録 Mob は **ワールドごと・UUID ごと**に保存します。保存先はワールドの `data/herobrine_ultimate.dat`。ゲーム標準の保存に連動し、別ワールドとは共有しません。能力の設定は死亡・再ログイン・次元移動後も保持します。
 

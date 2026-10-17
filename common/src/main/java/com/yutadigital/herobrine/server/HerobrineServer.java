@@ -2,6 +2,7 @@ package com.yutadigital.herobrine.server;
 
 import com.yutadigital.herobrine.core.Ability;
 import com.yutadigital.herobrine.core.PlayerSettings;
+import com.yutadigital.herobrine.core.ServerConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -37,10 +38,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -94,26 +91,8 @@ public final class HerobrineServer {
     public static void init(Path configDirectory, BiConsumer<ServerPlayer, CompoundTag> outbound) {
         sender = outbound;
         ALLOWLIST.clear();
-        Properties config = new Properties();
-        Path file = configDirectory.resolve("herobrine-ultimate-server.properties");
-        try {
-            Files.createDirectories(configDirectory);
-            if (Files.exists(file)) {
-                try (Reader reader = Files.newBufferedReader(file)) { config.load(reader); }
-            } else {
-                config.setProperty("require-permission", "false");
-                config.setProperty("allowed-uuids", "");
-                config.setProperty("destructive-lightning", "false");
-                config.setProperty("allow-player-combat", "false");
-                config.setProperty("allow-terrain", "true");
-                try (Writer writer = Files.newBufferedWriter(file)) {
-                    config.store(writer, "Herobrine Ultimate: abilities are available without OP or cheats by default. Set require-permission=true to use OP/owner/UUID restrictions. Destructive actions also require GUI confirmation.");
-                }
-            }
-        } catch (IOException | IllegalArgumentException error) {
-            config.clear();
-            System.err.println("[Herobrine Ultimate] Cannot read server configuration: " + error.getMessage());
-        }
+        Properties config = ServerConfig.load(configDirectory, message ->
+                System.err.println("[Herobrine Ultimate] " + message));
         for (String token : config.getProperty("allowed-uuids", "").split(",")) {
             try { if (!token.isBlank()) ALLOWLIST.add(UUID.fromString(token.trim())); }
             catch (IllegalArgumentException error) { System.err.println("[Herobrine Ultimate] Invalid allowlist UUID ignored."); }

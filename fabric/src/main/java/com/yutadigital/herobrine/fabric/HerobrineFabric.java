@@ -18,7 +18,8 @@ import net.minecraft.server.level.ServerPlayer;
 public final class HerobrineFabric implements ModInitializer {
     public static final ResourceLocation STATE = new ResourceLocation("herobrineultimate", "state");
     public static final ResourceLocation REQUEST = new ResourceLocation("herobrineultimate", "request");
-    public static final int MAX_PACKET_BYTES = 8192;
+    public static final int MAX_PACKET_BYTES = 8192; // Client requests remain tightly bounded.
+    public static final int MAX_STATE_BYTES = 1024 * 1024; // Server snapshots include player UUIDs.
 
     @Override
     public void onInitialize() {
@@ -54,7 +55,7 @@ public final class HerobrineFabric implements ModInitializer {
         boolean handedOff = false;
         try {
             buffer.writeNbt(state);
-            if (buffer.readableBytes() <= MAX_PACKET_BYTES) {
+            if (buffer.readableBytes() <= MAX_STATE_BYTES) {
                 ServerPlayNetworking.send(player, STATE, buffer);
                 handedOff = true;
             }
@@ -66,7 +67,15 @@ public final class HerobrineFabric implements ModInitializer {
 
     /** Reject empty, oversized, non-compound and trailing-byte packets before dispatch. */
     static CompoundTag readPacket(FriendlyByteBuf buffer) {
-        if (buffer.readableBytes() < 1 || buffer.readableBytes() > MAX_PACKET_BYTES) return null;
+        return readPacket(buffer, MAX_PACKET_BYTES);
+    }
+
+    static CompoundTag readState(FriendlyByteBuf buffer) {
+        return readPacket(buffer, MAX_STATE_BYTES);
+    }
+
+    private static CompoundTag readPacket(FriendlyByteBuf buffer, int limit) {
+        if (buffer.readableBytes() < 1 || buffer.readableBytes() > limit) return null;
         try {
             CompoundTag tag = buffer.readNbt();
             return tag != null && !buffer.isReadable() ? tag : null;
