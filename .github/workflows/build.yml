@@ -42,3 +42,26 @@ jobs:
           name: herobrineultimate-${{ matrix.loader }}-${{ matrix.label }}
           path: ${{ matrix.loader }}/build/libs/*.jar
           if-no-files-found: error
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: herobrine-prerelease
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: herobrineultimate-*-baseline
+          path: release-artifacts
+      - name: Publish and verify immutable alpha prereleases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 tools/publish_prerelease.py

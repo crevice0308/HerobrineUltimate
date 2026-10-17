@@ -1,6 +1,7 @@
 package com.yutadigital.herobrine.fabric;
 
 import io.netty.buffer.Unpooled;
+import com.yutadigital.herobrine.core.Ability;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import java.util.UUID;
@@ -57,16 +58,25 @@ public final class FabricPacketDecodeTest {
         } finally { prefixed.release(); }
         for (int players : new int[]{283, 284, 4096}) {
             CompoundTag state = new CompoundTag();
+            state.putString("kind", "state");
+            state.putBoolean("allowed", true);
+            CompoundTag settings = new CompoundTag();
+            settings.putBoolean("master", true);
+            for (Ability ability : Ability.values()) settings.putBoolean(ability.name(), false);
+            for (String key : new String[]{"move", "mine", "attack", "damage"}) settings.putDouble(key, 1.0);
+            state.put("settings", settings);
             ListTag visuals = new ListTag();
             for (int i = 0; i < players; i++) {
                 CompoundTag visual = new CompoundTag();
-                visual.putUUID("id", new UUID(0, i));
+                visual.putUUID("uuid", new UUID(0, i));
                 visuals.add(visual);
             }
             state.put("visuals", visuals);
             FriendlyByteBuf frame = new FriendlyByteBuf(Unpooled.buffer());
             try {
                 frame.writeNbt(state);
+                if (players == 283) check(frame.readableBytes() <= HerobrineFabric.MAX_PACKET_BYTES, "283 fits old boundary");
+                if (players == 284) check(frame.readableBytes() > HerobrineFabric.MAX_PACKET_BYTES, "284 exceeds old boundary");
                 check(frame.readableBytes() <= HerobrineFabric.MAX_STATE_BYTES, "State fits bounded frame: " + players);
                 check(state.equals(HerobrineFabric.readState(frame)), "Large state round trips: " + players);
                 check(frame.refCnt() == 1, "State decoder preserves ownership");
