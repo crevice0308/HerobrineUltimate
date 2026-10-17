@@ -81,7 +81,11 @@ def main():
         (current / filename).write_bytes(found[0].read_bytes())
     (current / 'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name + '\n' for p in sorted(current.glob('*.jar'))))
     (current / 'provenance.json').write_text(json.dumps({'source_commit': os.environ['GITHUB_SHA'], 'workflow_run': os.environ['GITHUB_RUN_ID'], 'version': version, 'minecraft': '1.20.1', 'java': 17, 'forge': '47.4.10', 'fabric_loader': '0.16.14', 'fabric_api': '0.92.2+1.20.1', 'runtime_tested': False}, indent=2) + '\n')
-    publish('v0.1.0-alpha.2', 'e6eb189b932e0050c0cedfe53f77ea0ff003320b', original, root / 'release/alpha.2-notes.md')
+    # Historical alpha.2 has different workflows from main and cannot be
+    # released by GITHUB_TOKEN. Keep its exact bytes archived, without retrying.
+    head = json.loads(gh('api', f'repos/{os.environ["GH_REPO"]}/git/ref/heads/main').stdout)['object']['sha']
+    if head != os.environ['GITHUB_SHA']:
+        raise RuntimeError('Main advanced; do not publish an obsolete workflow target')
     publish('v' + version, os.environ['GITHUB_SHA'], current, root / 'release/alpha.3-notes.md')
 
 
